@@ -21,8 +21,8 @@ Pick one path with the user:
 
 | Method | Command |
 |--------|---------|
-| OpenClaw | `openclaw skills install github.com/<org>/email-swipe` |
-| Git clone | `git clone https://github.com/<org>/email-swipe.git` |
+| OpenClaw | `openclaw skills install github.com/EmailGuy42069/email-swipe` |
+| Git clone | `git clone https://github.com/EmailGuy42069/email-swipe.git` |
 | Already in workspace | use `./scripts/` from skill root |
 
 Requirements: **Python 3** only. No npm, no backend.

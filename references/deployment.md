@@ -30,7 +30,7 @@ Server prints a **Mobile** URL, e.g. `http://192.168.1.2:8765`
 ## Option C — OpenClaw skill install
 
 ```bash
-openclaw skills install github.com/<org>/email-swipe
+openclaw skills install github.com/EmailGuy42069/email-swipe
 openclaw skills run email-swipe
 ```
 
@@ -41,7 +41,7 @@ Skill root: `~/.openclaw/skills/email-swipe/`
 ## Option D — Manual clone
 
 ```bash
-git clone https://github.com/<org>/email-swipe.git
+git clone https://github.com/EmailGuy42069/email-swipe.git
 cd email-swipe
 python scripts/serve-ui.py
 ```

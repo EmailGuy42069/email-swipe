@@ -47,13 +47,13 @@ Saved to `~/.config/email-swipe/preferences.json`
 
 **OpenClaw:**
 ```bash
-openclaw skills install github.com/<org>/email-swipe
+openclaw skills install github.com/EmailGuy42069/email-swipe
 openclaw skills run email-swipe
 ```
 
 **Manual:**
 ```bash
-git clone https://github.com/<org>/email-swipe.git
+git clone https://github.com/EmailGuy42069/email-swipe.git
 cd email-swipe
 python scripts/serve-ui.py
 ```
