@@ -1,0 +1,444 @@
+:root {
+  --bg: #f4f6f9;
+  --surface: #ffffff;
+  --surface-2: #eef1f6;
+  --border: #dde2ea;
+  --text: #1a1f2e;
+  --text-muted: #64748b;
+  --accent: #5b4cdb;
+  --keep: #0d9f6e;
+  --spam: #e03e3e;
+  --archive: #3b82f6;
+  --important: #d97706;
+  --unsubscribe: #7c3aed;
+  --block: #dc2626;
+  --radius: 16px;
+  --card-width: min(380px, 92vw);
+  --card-height: min(420px, 58dvh);
+  --shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
+  --shadow-lift: 0 12px 40px rgba(15, 23, 42, 0.14);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+body.swiping {
+  touch-action: none;
+  overflow: hidden;
+}
+
+#app {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  max-height: 100dvh;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem 0.5rem;
+}
+
+#progress-count {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.advanced-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.advanced-toggle:has(input:checked) {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: #f0eeff;
+}
+
+.advanced-toggle input {
+  accent-color: var(--accent);
+}
+
+.btn-icon {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.btn-icon:active {
+  background: var(--surface-2);
+}
+
+/* Progress */
+.progress-bar {
+  height: 4px;
+  background: var(--border);
+  margin: 0 1.25rem 0.5rem;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #8b7cf7);
+  border-radius: 3px;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+/* Card area */
+.card-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 0.75rem 1rem;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
+.card-stack {
+  position: relative;
+  width: var(--card-width);
+  height: var(--card-height);
+}
+
+.email-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  cursor: grab;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  box-shadow: var(--shadow);
+}
+
+.email-card:active { cursor: grabbing; }
+
+.email-card.dragging {
+  box-shadow: var(--shadow-lift);
+}
+
+.email-card.behind {
+  transform: scale(0.97) translate3d(0, 8px, 0);
+  pointer-events: none;
+}
+
+.card-header {
+  flex-shrink: 0;
+}
+
+.card-body {
+  flex: 1;
+  min-height: 0;
+  margin-top: 0.75rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+.email-card.behind .card-body {
+  overflow: hidden;
+}
+
+.email-html {
+  width: 100%;
+  height: 100%;
+  min-height: 160px;
+  border: 0;
+  display: block;
+  background: transparent;
+}
+
+.email-card.intro {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 2rem;
+}
+
+.intro-subject {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.intro-snippet {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.card-sender {
+  font-size: 0.85rem;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-from {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.card-subject {
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 0.5rem;
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-snippet {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.card-badges {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.badge {
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+
+.badge.attachment::before { content: '📎 '; }
+.badge.newsletter { color: var(--unsubscribe); background: #f3eeff; }
+
+/* Swipe overlays */
+.swipe-overlay {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1.2rem;
+  opacity: 0;
+  border: 3px solid;
+  pointer-events: none;
+  transition: opacity 0.1s;
+  background: var(--surface);
+}
+
+.swipe-overlay.spam {
+  left: 1.5rem;
+  color: var(--spam);
+  border-color: var(--spam);
+  transform: translateY(-50%) rotate(-12deg);
+}
+
+.swipe-overlay.keep {
+  right: 1.5rem;
+  color: var(--keep);
+  border-color: var(--keep);
+  transform: translateY(-50%) rotate(12deg);
+}
+
+.email-card.show-spam .swipe-overlay.spam,
+.email-card.show-keep .swipe-overlay.keep {
+  opacity: 1;
+}
+
+/* Action hints */
+.action-hints {
+  display: flex;
+  justify-content: space-between;
+  width: var(--card-width);
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.hint-spam { color: var(--spam); }
+.hint-keep { color: var(--keep); }
+
+/* Simple action buttons */
+.simple-actions {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  padding: 0.75rem 1.25rem 1rem;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.action-btn {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  font-size: 1.5rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: var(--shadow);
+  transition: transform 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.action-btn:active { transform: scale(0.95); }
+
+.action-btn.spam {
+  color: var(--spam);
+  border-color: #f5c4c4;
+  background: #fff5f5;
+}
+
+.action-btn.keep {
+  color: var(--keep);
+  border-color: #b8ebd8;
+  background: #f0fdf8;
+}
+
+/* Advanced folder actions */
+.folder-actions {
+  padding: 0 1.25rem 1.5rem;
+}
+
+.folder-actions.hidden { display: none; }
+
+.folder-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.folder-btn {
+  padding: 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.8rem;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: var(--shadow);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.folder-btn:active { transform: scale(0.98); }
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-muted);
+  max-width: 320px;
+}
+
+.empty-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.75rem;
+}
+
+.empty-hint {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.empty-hint code {
+  font-size: 0.8rem;
+  background: var(--surface-2);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+.empty-state.hidden { display: none; }
+
+@media (max-height: 700px) {
+  :root { --card-height: min(360px, 52dvh); }
+}
+
+@media (pointer: coarse) {
+  .action-btn {
+    width: 72px;
+    height: 72px;
+    font-size: 1.65rem;
+  }
+
+  .simple-actions {
+    gap: 4rem;
+  }
+
+  .intro-subject {
+    font-size: 1.5rem;
+  }
+}

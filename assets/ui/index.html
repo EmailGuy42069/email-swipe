@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#f4f6f9">
+  <title>Email Swipe</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <header class="header">
+      <div class="header-left">
+        <span id="progress-count">0 / 0</span>
+      </div>
+      <div class="header-right">
+        <label class="advanced-toggle" title="Route emails to specific folders">
+          <input type="checkbox" id="advanced-mode">
+          <span>Advanced</span>
+        </label>
+        <button id="btn-export" class="btn-icon" title="Export preferences">⬇️</button>
+      </div>
+    </header>
+
+    <div class="progress-bar">
+      <div id="progress-fill" class="progress-fill"></div>
+    </div>
+
+    <div class="card-area">
+      <div id="empty-state" class="empty-state hidden">
+        <p class="empty-title">All done!</p>
+        <p class="empty-hint">Tap ⬇️ above to export your preferences, then share <code>preferences.json</code> with your agent.</p>
+      </div>
+
+      <div id="card-stack" class="card-stack"></div>
+
+      <div class="action-hints">
+        <span class="hint hint-spam">← Spam</span>
+        <span class="hint hint-keep">Keep →</span>
+      </div>
+    </div>
+
+    <div class="action-buttons simple-actions">
+      <button class="action-btn spam" data-action="spam" title="Spam (←)">✕</button>
+      <button class="action-btn keep" data-action="keep" title="Keep (→)">✓</button>
+    </div>
+
+    <div id="folder-actions" class="folder-actions hidden">
+      <div class="folder-buttons">
+        <button class="folder-btn" data-action="archive">🗄️ Archive</button>
+        <button class="folder-btn" data-action="important">⭐ Important</button>
+        <button class="folder-btn" data-action="unsubscribe">📭 Unsubscribe</button>
+        <button class="folder-btn" data-action="block">🚫 Block</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+[
+  {
+    "id": "demo-1",
+    "sender": "GitHub",
+    "from": "notifications@github.com",
+    "subject": "[blakemcginn/repo] New pull request #42",
+    "snippet": "A new pull request has been opened by contributor123.",
+    "html": "<p><strong>contributor123</strong> opened a new pull request in <code>blakemcginn/repo</code>:</p><h3>Fix auth token refresh logic</h3><p>This PR updates the token refresh flow to handle expired sessions gracefully and adds retry logic for transient failures.</p><ul><li>Added exponential backoff</li><li>Fixed race condition in refresh handler</li><li>Updated unit tests</li></ul><p><a href=\"#\">View pull request</a></p>",
+    "date": "2h ago"
+  },
+  {
+    "id": "demo-2",
+    "sender": "LinkedIn",
+    "from": "noreply@linkedin.com",
+    "subject": "You have 5 new connection requests",
+    "snippet": "People in your network are waiting to connect.",
+    "date": "3h ago",
+    "isNewsletter": true
+  },
+  {
+    "id": "demo-3",
+    "sender": "Amazon",
+    "from": "shipment-tracking@amazon.com",
+    "subject": "Your package has been delivered",
+    "snippet": "Your order was delivered to your front door at 2:34 PM.",
+    "html": "<p>Hello,</p><p>Your package was <strong>delivered today at 2:34 PM</strong>.</p><p>Order #112-8847291-4456234<br>Left at: Front door</p><p>How was your delivery?</p>",
+    "date": "4h ago"
+  },
+  {
+    "id": "demo-4",
+    "sender": "Substack",
+    "from": "newsletter@substack.com",
+    "subject": "Weekly digest: 12 new posts from your subscriptions",
+    "snippet": "Catch up on the best writing from your favorite newsletters this week.",
+    "date": "5h ago",
+    "isNewsletter": true
+  },
+  {
+    "id": "demo-5",
+    "sender": "Stripe",
+    "from": "receipts@stripe.com",
+    "subject": "Receipt for your payment of $29.00",
+    "snippet": "Thank you for your payment. Your receipt is attached.",
+    "html": "<p>Receipt from Acme SaaS</p><table style=\"width:100%;border-collapse:collapse\"><tr><td style=\"padding:8px 0\">Invoice</td><td style=\"text-align:right\">#INV-2024-0892</td></tr><tr><td style=\"padding:8px 0\">Amount paid</td><td style=\"text-align:right\"><strong>$29.00</strong></td></tr><tr><td style=\"padding:8px 0\">Payment method</td><td style=\"text-align:right\">Visa •••• 4242</td></tr></table>",
+    "date": "6h ago",
+    "hasAttachment": true
+  },
+  {
+    "id": "demo-6",
+    "sender": "Google Calendar",
+    "from": "calendar-notification@google.com",
+    "subject": "Reminder: Team standup in 15 minutes",
+    "snippet": "Team standup — Daily sync with engineering.",
+    "date": "15m ago"
+  },
+  {
+    "id": "demo-7",
+    "sender": "Marketing Weekly",
+    "from": "promo@marketingweekly.io",
+    "subject": "50% off annual subscription — limited time!",
+    "snippet": "Don't miss our biggest sale of the year.",
+    "date": "8h ago",
+    "isNewsletter": true
+  },
+  {
+    "id": "demo-8",
+    "sender": "Jira",
+    "from": "jira@atlassian.com",
+    "subject": "PROJ-2847 assigned to you: Fix login redirect bug",
+    "snippet": "You have been assigned a new issue. Priority: High.",
+    "date": "1h ago"
+  },
+  {
+    "id": "demo-9",
+    "sender": "Netflix",
+    "from": "info@account.netflix.com",
+    "subject": "New arrivals you might like",
+    "snippet": "Based on your viewing history, we think you'll enjoy The Bear Season 3.",
+    "date": "1d ago",
+    "isNewsletter": true
+  },
+  {
+    "id": "demo-10",
+    "sender": "HR Department",
+    "from": "hr@company.com",
+    "subject": "Action required: Benefits enrollment deadline",
+    "snippet": "Open enrollment closes Friday.",
+    "date": "2h ago",
+    "hasAttachment": true
+  },
+  {
+    "id": "demo-11",
+    "sender": "Bank of America",
+    "from": "alerts@bankofamerica.com",
+    "subject": "Unusual activity detected on your account",
+    "snippet": "We noticed a login attempt from a new device.",
+    "date": "1h ago"
+  },
+  {
+    "id": "demo-12",
+    "sender": "Figma",
+    "from": "comments@figma.com",
+    "subject": "New comment on \"Dashboard v2\"",
+    "snippet": "Alex left a comment on your design file.",
+    "date": "4h ago"
+  }
+]
