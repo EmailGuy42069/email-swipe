@@ -1,26 +1,25 @@
-/* Email Swipe - Agent-driven training UI */
+/* Email Swipe - Optional notes via button click */
 
 const DB_NAME = 'EmailSwipe';
-const DB_VERSION = 1;
+const DB_VERSION = 3;
 const STORE_NAME = 'preferences';
-const SWIPE_THRESHOLD = window.matchMedia('(pointer: coarse)').matches ? 60 : 80;
+const CONFIG_KEY = 'emailSwipeConfig';
 
-const FOLDER_ACTIONS = ['archive', 'important', 'unsubscribe', 'block'];
-
-const INTRO_CARD = {
-  id: '__intro__',
-  isIntro: true,
-  sender: '',
-  from: '',
-  subject: '← Spam    Keep →',
-  snippet: 'Swipe left for spam. Swipe right for keep.',
-};
+const DEFAULT_FOLDERS = [
+  { id: 'spam', label: 'Spam', icon: '🗑️', color: '#ef4444' },
+  { id: 'archive', label: 'Archive', icon: '🗄️', color: '#6b7280' },
+  { id: 'keep', label: 'Keep', icon: '✓', color: '#10b981' },
+  { id: 'important', label: 'Important', icon: '⭐', color: '#f59e0b' },
+];
 
 const state = {
   emails: [],
   trainingTotal: 0,
   swipeCount: 0,
-  advancedMode: localStorage.getItem('email-swipe-advanced') === 'true',
+  advancedMode: false,
+  folders: [],
+  currentNote: '',  // Note for current email
+  editingNote: false,
   isAnimating: false,
 };
 
@@ -34,7 +33,8 @@ function openDB() {
     req.onupgradeneeded = (e) => {
       const db = e.target.result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+        store.createIndex('emailId', 'emailId', { unique: false });
       }
     };
   });
@@ -56,11 +56,28 @@ async function getAllSwipes() {
     const tx = db.transaction(STORE_NAME, 'readonly');
     const req = tx.objectStore(STORE_NAME).getAll();
     req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    req.onerror = () => reject(tx.error);
   });
 }
 
-// ─── Email loading (agent injects) ───────────────────────────
+// ─── Config (Folders from Agent) ─────────────────────────────
+
+function loadConfig() {
+  try {
+    const config = JSON.parse(localStorage.getItem(CONFIG_KEY) || '{}');
+    state.folders = config.folders || DEFAULT_FOLDERS;
+    return config;
+  } catch {
+    state.folders = DEFAULT_FOLDERS;
+    return {};
+  }
+}
+
+function saveConfig(config) {
+  localStorage.setItem(CONFIG_KEY, JSON.stringify({ ...loadConfig(), ...config }));
+}
+
+// ─── Email Loading ───────────────────────────────────────────
 
 function normalizeEmail(raw, index) {
   return {
@@ -73,12 +90,7 @@ function normalizeEmail(raw, index) {
     date: raw.date || '',
     hasAttachment: raw.hasAttachment || false,
     isNewsletter: raw.isNewsletter || false,
-    isIntro: raw.isIntro || false,
   };
-}
-
-function withIntro(emails) {
-  return [INTRO_CARD, ...emails];
 }
 
 async function fetchEmailList(url) {
@@ -100,36 +112,49 @@ async function loadFromFile() {
 }
 
 async function loadEmails(emails) {
-  const normalized = emails.map(normalizeEmail);
-  state.trainingTotal = normalized.length;
-  state.emails = withIntro(normalized);
+  state.trainingTotal = emails.length;
+  state.emails = emails.map(normalizeEmail);
+  state.currentNote = '';
   const swipes = await getAllSwipes();
   state.swipeCount = swipes.length;
   updateProgress();
   renderCards();
 }
 
-// ─── Feature extraction ──────────────────────────────────────
+// ─── Features ────────────────────────────────────────────────
 
 function extractFeatures(email) {
   const domain = (email.from || '').split('@')[1] || '';
-  const text = `${email.subject} ${email.snippet}`.toLowerCase();
-  const keywords = [];
-  for (const kw of ['unsubscribe', 'receipt', 'newsletter', 'digest', 'promo', 'urgent', 'reminder']) {
-    if (text.includes(kw)) keywords.push(kw);
-  }
-  return { hasAttachment: email.hasAttachment || false, isNewsletter: email.isNewsletter || false, senderDomain: domain, keywords };
-}
-
-function extractSenderDomain(from) {
-  return (from || '').split('@')[1] || '';
+  return {
+    hasAttachment: email.hasAttachment || false,
+    isNewsletter: email.isNewsletter || false,
+    senderDomain: domain,
+  };
 }
 
 // ─── Export ──────────────────────────────────────────────────
 
 async function exportPreferences() {
   const swipes = await getAllSwipes();
-  const preferences = buildPreferences(swipes);
+  const preferences = {
+    metadata: {
+      generatedAt: new Date().toISOString(),
+      totalSwipes: swipes.length,
+      version: '1.4'
+    },
+    folders: state.folders.map(f => f.id),
+    swipes: swipes.map(s => ({
+      emailId: s.emailId,
+      sender: s.sender,
+      from: s.from,
+      subject: s.subject,
+      action: s.action,
+      note: s.note || '',
+      timestamp: s.timestamp,
+    })),
+    senderRules: extractSenderRules(swipes),
+  };
+  
   const blob = new Blob([JSON.stringify(preferences, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -137,70 +162,20 @@ async function exportPreferences() {
   a.download = 'preferences.json';
   a.click();
   URL.revokeObjectURL(url);
+  
+  // Also export folder creation requests
+  const pendingFolders = JSON.parse(localStorage.getItem('pendingFolders') || '[]');
+  if (pendingFolders.length > 0) {
+    const folderBlob = new Blob([JSON.stringify({ createFolders: pendingFolders }, null, 2)], { type: 'application/json' });
+    const folderUrl = URL.createObjectURL(folderBlob);
+    const folderA = document.createElement('a');
+    folderA.href = folderUrl;
+    folderA.download = 'folder-requests.json';
+    folderA.click();
+    URL.revokeObjectURL(folderUrl);
+  }
+  
   return preferences;
-}
-
-function buildPreferences(swipes) {
-  const byAction = { keep: [], spam: [], archive: [], important: [], unsubscribe: [], block: [] };
-  for (const swipe of swipes) {
-    if (byAction[swipe.action]) byAction[swipe.action].push(swipe);
-  }
-  return {
-    metadata: { generatedAt: new Date().toISOString(), totalSwipes: swipes.length, version: '1.2' },
-    patterns: extractPatterns(byAction),
-    fewShotExamples: generateFewShotExamples(swipes),
-    senderRules: extractSenderRules(swipes),
-    folderRules: extractFolderRules(swipes),
-  };
-}
-
-function extractPatterns(byAction) {
-  const patterns = { alwaysKeep: [], alwaysSpam: [], alwaysArchive: [], alwaysImportant: [], alwaysUnsubscribe: [], alwaysBlock: [] };
-  const actionMap = { keep: 'alwaysKeep', spam: 'alwaysSpam', archive: 'alwaysArchive', important: 'alwaysImportant', unsubscribe: 'alwaysUnsubscribe', block: 'alwaysBlock' };
-
-  for (const [action, key] of Object.entries(actionMap)) {
-    const domainCounts = {};
-    const keywordCounts = {};
-    for (const swipe of byAction[action] || []) {
-      const domain = swipe.features?.senderDomain || extractSenderDomain(swipe.from);
-      if (domain) domainCounts[domain] = (domainCounts[domain] || 0) + 1;
-      for (const kw of (swipe.features?.keywords || [])) {
-        keywordCounts[kw] = (keywordCounts[kw] || 0) + 1;
-      }
-    }
-    patterns[key] = [
-      ...Object.entries(domainCounts).filter(([, c]) => c >= 2).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([d, c]) => `Emails from ${d} (${c}x)`),
-      ...Object.entries(keywordCounts).filter(([, c]) => c >= 2).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, c]) => `Contains "${k}" (${c}x)`),
-    ];
-  }
-  return patterns;
-}
-
-function generateFewShotExamples(swipes) {
-  const seen = new Set();
-  const examples = [];
-  for (const swipe of swipes) {
-    const key = `${swipe.from}-${swipe.action}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    examples.push({
-      email: { subject: swipe.subject, sender: swipe.sender, snippet: swipe.snippet || '' },
-      decision: swipe.action,
-      folder: FOLDER_ACTIONS.includes(swipe.action) ? swipe.action : null,
-      reasoning: generateReasoning(swipe),
-    });
-    if (examples.length >= 10) break;
-  }
-  return examples;
-}
-
-function generateReasoning(swipe) {
-  const f = swipe.features || {};
-  const parts = [];
-  if (f.isNewsletter) parts.push('newsletter');
-  if (f.hasAttachment) parts.push('has attachment');
-  if (f.senderDomain) parts.push(`from ${f.senderDomain}`);
-  return `${swipe.action} — ${parts.length ? parts.join(', ') : 'user preference'}`;
 }
 
 function extractSenderRules(swipes) {
@@ -217,15 +192,7 @@ function extractSenderRules(swipes) {
   return rules;
 }
 
-function extractFolderRules(swipes) {
-  const rules = {};
-  for (const swipe of swipes) {
-    if (FOLDER_ACTIONS.includes(swipe.action)) rules[swipe.from || swipe.sender] = swipe.action;
-  }
-  return rules;
-}
-
-// ─── Card UI ─────────────────────────────────────────────────
+// ─── UI Rendering ────────────────────────────────────────────
 
 function updateProgress() {
   const goal = state.trainingTotal || 1;
@@ -233,300 +200,340 @@ function updateProgress() {
   document.getElementById('progress-fill').style.width = `${Math.min(100, (state.swipeCount / goal) * 100)}%`;
 }
 
-function updateAdvancedMode() {
-  document.getElementById('folder-actions').classList.toggle('hidden', !state.advancedMode);
-}
-
 function renderCards() {
   const stack = document.getElementById('card-stack');
   const empty = document.getElementById('empty-state');
-  stack.innerHTML = '';
-
+  
   if (state.emails.length === 0) {
+    stack.innerHTML = '';
     empty.classList.remove('hidden');
-    stack.style.display = 'none';
-    const title = empty.querySelector('.empty-title');
-    const hint = empty.querySelector('.empty-hint');
-    if (state.trainingTotal > 0) {
-      if (title) title.textContent = 'All done!';
-      if (hint) hint.style.display = '';
-    } else {
-      if (title) title.textContent = 'Waiting for emails…';
-      if (hint) hint.textContent = 'Your agent will load your inbox, then refresh this page.';
-    }
     return;
   }
-
+  
   empty.classList.add('hidden');
-  stack.style.display = 'block';
-
-  const top = state.emails[0];
-  const showBehind = !top.isIntro && state.emails.length > 1;
-
-  if (showBehind) {
-    const behind = createCard(state.emails[1], true);
-    behind.style.zIndex = '1';
-    stack.appendChild(behind);
-  }
-
-  const front = createCard(top, false);
-  front.style.zIndex = '2';
-  stack.appendChild(front);
-  initCardDrag(front, top);
+  
+  // Render top card
+  const email = state.emails[0];
+  stack.innerHTML = '';
+  
+  const card = createCard(email);
+  stack.appendChild(card);
+  
+  // Update note button state
+  updateNoteButton();
 }
 
-function createCard(email, isBehind) {
+function createCard(email) {
   const card = document.createElement('div');
-  card.className = `email-card${isBehind ? ' behind' : ' front'}${email.isIntro ? ' intro' : ''}`;
-  card.dataset.emailId = email.id;
-
-  if (email.isIntro) {
-    card.innerHTML = `
-      <div class="swipe-overlay spam">SPAM</div>
-      <div class="swipe-overlay keep">KEEP</div>
-      <div class="intro-subject">${escapeHtml(email.subject)}</div>
-      <div class="intro-snippet">${escapeHtml(email.snippet)}</div>
-    `;
-    return card;
-  }
-
+  card.className = 'email-card';
+  
   const badges = [];
-  if (email.hasAttachment) badges.push('<span class="badge attachment">Attachment</span>');
-  if (email.isNewsletter) badges.push('<span class="badge newsletter">Newsletter</span>');
-
-  const useHtml = !isBehind && email.html;
-  const bodyMarkup = useHtml
-    ? '<iframe class="email-html" sandbox="" title="Email body"></iframe>'
-    : `<div class="card-snippet">${escapeHtml(email.snippet)}</div>`;
-
+  if (email.hasAttachment) badges.push('<span class="badge">📎</span>');
+  if (email.isNewsletter) badges.push('<span class="badge">📰</span>');
+  
+  const bodyContent = email.html 
+    ? `<iframe class="email-body" sandbox="" srcdoc="${escapeHtml(wrapEmailHtml(email.html))}"></iframe>`
+    : `<div class="email-text">${escapeHtml(email.snippet)}</div>`;
+  
   card.innerHTML = `
-    <div class="swipe-overlay spam">SPAM</div>
-    <div class="swipe-overlay keep">KEEP</div>
-    <div class="card-header">
-      <div class="card-sender">${escapeHtml(email.sender)}</div>
-      <div class="card-from">${escapeHtml(email.from)}</div>
-      <div class="card-subject">${escapeHtml(email.subject)}</div>
-      <div class="card-meta">
-        <div class="card-badges">${badges.join('')}</div>
-        <span>${escapeHtml(email.date || '')}</span>
+    <div class="email-header">
+      <div class="email-sender">${escapeHtml(email.sender)}</div>
+      <div class="email-from">${escapeHtml(email.from)}</div>
+      <div class="email-subject">${escapeHtml(email.subject)}</div>
+      <div class="email-meta">
+        ${badges.join('')}
+        <span class="email-date">${escapeHtml(email.date || '')}</span>
       </div>
     </div>
-    <div class="card-body">${bodyMarkup}</div>
+    <div class="email-content">
+      ${bodyContent}
+    </div>
+    <button class="btn-note" id="btn-add-note" title="Add note">
+      📝 ${state.currentNote ? 'Edit Note' : 'Add Note'}
+    </button>
   `;
-
-  if (useHtml) {
-    card.querySelector('.email-html').srcdoc = wrapEmailHtml(email.html);
-  }
-
+  
+  // Add note button listener
+  const noteBtn = card.querySelector('#btn-add-note');
+  noteBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    showNoteModal();
+  });
+  
   return card;
+}
+
+function updateNoteButton() {
+  const btn = document.getElementById('btn-add-note');
+  if (btn) {
+    btn.innerHTML = state.currentNote ? '📝 Edit Note' : '📝 Add Note';
+    if (state.currentNote) {
+      btn.classList.add('has-note');
+    } else {
+      btn.classList.remove('has-note');
+    }
+  }
 }
 
 function wrapEmailHtml(html) {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.5; margin: 0; padding: 0; color: #1a1f2e; word-wrap: break-word; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.5; margin: 0; padding: 16px; color: #1a1f2e; }
     img { max-width: 100%; height: auto; }
     a { color: #5b4cdb; pointer-events: none; }
+    table { max-width: 100%; }
   </style></head><body>${html}</body></html>`;
 }
 
 function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function initCardDrag(card, email) {
-  if (card.dataset.dragReady) return;
-  card.dataset.dragReady = '1';
+// ─── Advanced Panel ──────────────────────────────────────────
 
-  let startX = 0;
-  let currentX = 0;
-  let dragging = false;
-  let pointerId = null;
-
-  const setOffset = (x) => {
-    currentX = x;
-    card.style.transform = `translate3d(${x}px, 0, 0) rotate(${x * 0.04}deg)`;
-    card.classList.toggle('show-spam', x < -40);
-    card.classList.toggle('show-keep', x > 40);
-  };
-
-  const reset = () => {
-    card.style.transform = '';
-    card.classList.remove('show-spam', 'show-keep', 'dragging');
-    document.body.classList.remove('swiping');
-    dragging = false;
-    pointerId = null;
-    currentX = 0;
-    startX = 0;
-  };
-
-  const onEnd = () => {
-    if (!dragging) return;
-    card.releasePointerCapture?.(pointerId);
-    dragging = false;
-    document.body.classList.remove('swiping');
-    card.classList.remove('dragging');
-
-    let action = null;
-    if (currentX < -SWIPE_THRESHOLD) action = 'spam';
-    else if (currentX > SWIPE_THRESHOLD) action = 'keep';
-
-    if (action) swipeCard(card, email, action);
-    else reset();
-  };
-
-  card.addEventListener('pointerdown', (e) => {
-    if (card.style.pointerEvents === 'none') return;
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
-    if (email.html && e.target.closest('.card-body')) return;
-
-    dragging = true;
-    pointerId = e.pointerId;
-    startX = e.clientX;
-    card.classList.add('dragging');
-    document.body.classList.add('swiping');
-    card.setPointerCapture(e.pointerId);
+function renderFolderZones() {
+  const container = document.getElementById('folder-zones');
+  container.innerHTML = '';
+  
+  state.folders.forEach(folder => {
+    const zone = document.createElement('div');
+    zone.className = 'folder-zone';
+    zone.dataset.action = folder.id;
+    zone.style.setProperty('--zone-color', folder.color);
+    zone.innerHTML = `
+      <span class="zone-icon">${folder.icon}</span>
+      <span class="zone-label">${folder.label}</span>
+    `;
+    zone.addEventListener('click', () => handleAction(folder.id));
+    container.appendChild(zone);
   });
-
-  card.addEventListener('pointermove', (e) => {
-    if (!dragging || e.pointerId !== pointerId) return;
-    e.preventDefault();
-    setOffset(e.clientX - startX);
-  });
-
-  card.addEventListener('pointerup', onEnd);
-  card.addEventListener('pointercancel', reset);
 }
 
-function promoteBehindCard(stack) {
-  const behind = stack.querySelector('.email-card.behind');
-  if (!behind || state.emails.length === 0) return null;
-
-  const email = state.emails[0];
-  behind.classList.remove('behind');
-  behind.classList.add('front');
-  behind.style.zIndex = '2';
-  behind.style.transform = '';
-
-  if (email.html) {
-    const body = behind.querySelector('.card-body');
-    body.innerHTML = '<iframe class="email-html" sandbox="" title="Email body"></iframe>';
-    body.querySelector('.email-html').srcdoc = wrapEmailHtml(email.html);
+function toggleAdvanced(show) {
+  state.advancedMode = show;
+  const panel = document.getElementById('advanced-panel');
+  const simpleActions = document.getElementById('simple-actions');
+  
+  if (show) {
+    panel.classList.remove('hidden');
+    simpleActions.classList.add('hidden');
+    renderFolderZones();
+  } else {
+    panel.classList.add('hidden');
+    simpleActions.classList.remove('hidden');
   }
-
-  initCardDrag(behind, email);
-  return behind;
 }
 
-function replaceBehindCard(stack) {
-  stack.querySelector('.email-card.behind')?.remove();
+// ─── Actions ─────────────────────────────────────────────────
 
-  const top = state.emails[0];
-  if (top.isIntro || state.emails.length < 2) return;
-
-  const behind = createCard(state.emails[1], true);
-  behind.style.zIndex = '1';
-  stack.insertBefore(behind, stack.firstChild);
+function handleAction(action) {
+  if (state.isAnimating || state.emails.length === 0) return;
+  
+  completeSwipe(action);
 }
 
-function swipeCard(card, email, action) {
+async function completeSwipe(action) {
   if (state.isAnimating) return;
   state.isAnimating = true;
-
-  const stack = document.getElementById('card-stack');
-
-  card.classList.remove('dragging', 'show-spam', 'show-keep');
-  card.style.pointerEvents = 'none';
-  card.style.zIndex = '3';
-  card.style.transition = 'transform 0.26s ease-out, opacity 0.26s ease-out';
-
-  const offscreen = (action === 'spam' ? -1 : 1) * window.innerWidth * 0.85;
-  const rotation = action === 'spam' ? -16 : 16;
-  requestAnimationFrame(() => {
-    card.style.transform = `translate3d(${offscreen}px, 0, 0) rotate(${rotation}deg)`;
+  
+  const email = state.emails[0];
+  const note = state.currentNote;
+  
+  // Animate card away
+  const card = document.querySelector('.email-card');
+  if (card) {
+    const directions = { spam: -1, archive: -1, keep: 1, important: 1 };
+    const dir = directions[action] || -1;
+    card.style.transform = `translateX(${dir * 100}vw) rotate(${dir * 10}deg)`;
     card.style.opacity = '0';
+  }
+  
+  // Save swipe
+  await saveSwipe({
+    emailId: email.id,
+    sender: email.sender,
+    from: email.from,
+    subject: email.subject,
+    snippet: email.snippet,
+    action,
+    note: note || '',
+    timestamp: new Date().toISOString(),
+    features: extractFeatures(email),
   });
-
-  if (!email.isIntro) {
-    state.swipeCount++;
-    updateProgress();
-    saveSwipe({
-      emailId: email.id,
-      sender: email.sender,
-      from: email.from,
-      subject: email.subject,
-      snippet: email.snippet,
-      action,
-      timestamp: new Date().toISOString(),
-      features: extractFeatures(email),
-    });
-  }
-
+  
+  state.swipeCount++;
   state.emails.shift();
-
-  if (state.emails.length === 0) {
-    setTimeout(() => {
-      card.remove();
-      renderCards();
-      state.isAnimating = false;
-    }, 260);
-    return;
-  }
-
-  const hadBehind = !!stack.querySelector('.email-card.behind');
-  if (hadBehind) {
-    promoteBehindCard(stack);
-    replaceBehindCard(stack);
-  } else {
-    renderCards();
-  }
-
+  state.currentNote = '';  // Reset note for next email
+  
   setTimeout(() => {
-    card.remove();
-    state.isAnimating = false;
-  }, 260);
-}
-
-function triggerAction(action) {
-  const card = document.querySelector('#card-stack .email-card.front');
-  if (!card || card.style.pointerEvents === 'none' || state.emails.length === 0) return;
-  swipeCard(card, state.emails[0], action);
-}
-
-// ─── Init ────────────────────────────────────────────────────
-
-async function boot() {
-  updateAdvancedMode();
-  const emails = await loadFromFile();
-  if (emails.length > 0) {
-    await loadEmails(emails);
-  } else {
+    updateProgress();
     renderCards();
-  }
+    state.isAnimating = false;
+  }, 300);
 }
+
+// ─── Note Modal ──────────────────────────────────────────────
+
+function showNoteModal() {
+  if (state.emails.length === 0) return;
+  
+  const email = state.emails[0];
+  const modal = document.getElementById('note-modal');
+  const context = document.getElementById('note-context');
+  const input = document.getElementById('note-input');
+  
+  context.textContent = email.subject;
+  input.value = state.currentNote;
+  input.placeholder = "Why this decision? (e.g., 'Always keep receipts')";
+  
+  modal.classList.remove('hidden');
+  state.editingNote = true;
+  input.focus();
+}
+
+function hideNoteModal() {
+  document.getElementById('note-modal').classList.add('hidden');
+  state.editingNote = false;
+}
+
+function saveNote() {
+  const input = document.getElementById('note-input');
+  state.currentNote = input.value.trim();
+  hideNoteModal();
+  updateNoteButton();
+}
+
+// ─── Create Folder ───────────────────────────────────────────
+
+function showCreateFolderModal() {
+  const modal = document.getElementById('create-folder-modal');
+  const input = document.getElementById('new-folder-name');
+  input.value = '';
+  modal.classList.remove('hidden');
+  input.focus();
+}
+
+function hideCreateFolderModal() {
+  document.getElementById('create-folder-modal').classList.add('hidden');
+}
+
+function requestNewFolder() {
+  const name = document.getElementById('new-folder-name').value.trim();
+  if (!name) return;
+  
+  // Store pending folder request
+  const pending = JSON.parse(localStorage.getItem('pendingFolders') || '[]');
+  pending.push({
+    name,
+    requestedAt: new Date().toISOString(),
+  });
+  localStorage.setItem('pendingFolders', JSON.stringify(pending));
+  
+  // Add to UI temporarily
+  const newFolder = {
+    id: `custom-${Date.now()}`,
+    label: name,
+    icon: '📁',
+    color: '#6366f1',
+    pending: true,
+  };
+  state.folders.push(newFolder);
+  renderFolderZones();
+  hideCreateFolderModal();
+  
+  alert(`Folder "${name}" will be created when you export. The agent will create it in your email account.`);
+}
+
+// ─── Event Listeners ─────────────────────────────────────────
 
 function init() {
-  const advancedCheckbox = document.getElementById('advanced-mode');
-  advancedCheckbox.checked = state.advancedMode;
-  advancedCheckbox.addEventListener('change', () => {
-    state.advancedMode = advancedCheckbox.checked;
-    localStorage.setItem('email-swipe-advanced', state.advancedMode);
-    updateAdvancedMode();
+  loadConfig();
+  
+  // Simple action buttons
+  document.querySelectorAll('#simple-actions .swipe-btn').forEach(btn => {
+    btn.addEventListener('click', () => handleAction(btn.dataset.action));
   });
-
+  
+  // Advanced toggle
+  document.getElementById('btn-advanced').addEventListener('click', () => toggleAdvanced(true));
+  document.getElementById('btn-close-advanced').addEventListener('click', () => toggleAdvanced(false));
+  
+  // Export
   document.getElementById('btn-export').addEventListener('click', exportPreferences);
-  document.querySelectorAll('.action-btn, .folder-btn').forEach(btn => {
-    btn.addEventListener('click', () => triggerAction(btn.dataset.action));
+  
+  // Note modal
+  document.getElementById('btn-save-note').addEventListener('click', saveNote);
+  document.getElementById('btn-cancel-note').addEventListener('click', hideNoteModal);
+  
+  // Create folder
+  document.getElementById('btn-create-folder').addEventListener('click', showCreateFolderModal);
+  document.getElementById('btn-cancel-folder').addEventListener('click', hideCreateFolderModal);
+  document.getElementById('btn-confirm-folder').addEventListener('click', requestNewFolder);
+  document.getElementById('new-folder-name').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') requestNewFolder();
   });
-
+  
+  // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
-    const keyMap = { ArrowLeft: 'spam', ArrowRight: 'keep' };
-    if (keyMap[e.key]) { e.preventDefault(); triggerAction(keyMap[e.key]); }
+    if (state.isAnimating || state.emails.length === 0) return;
+    if (state.editingNote) return;  // Don't intercept when typing note
+    if (document.querySelector('.modal:not(.hidden)')) return;
+    
+    const keyMap = {
+      ArrowLeft: 'archive',
+      ArrowUp: 'spam',
+      ArrowRight: 'keep',
+    };
+    if (keyMap[e.key]) {
+      e.preventDefault();
+      handleAction(keyMap[e.key]);
+    }
   });
+  
+  // Touch/swipe support
+  initTouchSupport();
+  
+  // Load emails
+  loadFromFile().then(emails => {
+    if (emails.length > 0) loadEmails(emails);
+  });
+  
+  window.EmailSwipe = { loadEmails, exportPreferences, setFolders: (folders) => {
+    state.folders = folders;
+    saveConfig({ folders });
+    if (state.advancedMode) renderFolderZones();
+  }};
+}
 
-  window.EmailSwipe = { loadEmails, exportPreferences };
-  boot();
+function initTouchSupport() {
+  let touchStartX = 0;
+  let touchStartY = 0;
+  
+  document.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  
+  document.addEventListener('touchend', (e) => {
+    if (state.isAnimating || state.emails.length === 0) return;
+    if (state.advancedMode) return;
+    if (state.editingNote) return;
+    
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+    
+    // Horizontal swipe
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 80) {
+      if (deltaX > 0) handleAction('keep');
+      else handleAction('archive');
+    }
+    // Vertical swipe (up for spam)
+    else if (deltaY < -80 && Math.abs(deltaY) > Math.abs(deltaX)) {
+      handleAction('spam');
+    }
+  }, { passive: true });
 }
 
 document.addEventListener('DOMContentLoaded', init);

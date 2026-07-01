@@ -5,7 +5,7 @@ import socket
 import socketserver
 import os
 
-PORT = 8765
+PORT = 8767
 DIRECTORY = os.path.join(os.path.dirname(__file__), '../assets/ui')
 
 

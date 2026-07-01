@@ -8,20 +8,22 @@
   <meta name="theme-color" content="#f4f6f9">
   <title>Email Swipe</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="styles.css?v=2">
+  <link rel="stylesheet" href="styles.css?v=5">
 </head>
 <body>
   <div id="app">
+    <!-- Header -->
     <header class="header">
       <div class="header-left">
         <span id="progress-count">0 / 0</span>
       </div>
       <div class="header-right">
-        <label class="advanced-toggle" title="Route emails to specific folders">
-          <input type="checkbox" id="advanced-mode">
-          <span>Advanced</span>
-        </label>
-        <button id="btn-export" class="btn-icon" title="Export preferences">⬇️</button>
+        <button id="btn-advanced" class="btn-toggle" title="Advanced mode">
+          ⚙️
+        </button>
+        <button id="btn-export" class="btn-icon" title="Export preferences">
+          ⬇️
+        </button>
       </div>
     </header>
 
@@ -29,35 +31,77 @@
       <div id="progress-fill" class="progress-fill"></div>
     </div>
 
-    <div class="card-area">
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Empty State -->
       <div id="empty-state" class="empty-state hidden">
         <p class="empty-title">All done!</p>
-        <p class="empty-hint">Tap ⬇️ above to export your preferences, then share <code>preferences.json</code> with your agent.</p>
+        <p class="empty-hint">Tap ⬇️ above to export your preferences.</p>
       </div>
 
+      <!-- Card Stack -->
       <div id="card-stack" class="card-stack"></div>
 
-      <div class="action-hints">
-        <span class="hint hint-spam">← Spam</span>
-        <span class="hint hint-keep">Keep →</span>
+      <!-- Simple Actions (Normal Mode) -->
+      <div id="simple-actions" class="simple-actions">
+        <button class="swipe-btn swipe-left" data-action="archive">
+          <span class="swipe-icon">←</span>
+          <span class="swipe-label">Archive</span>
+        </button>
+        <button class="swipe-btn swipe-up" data-action="spam">
+          <span class="swipe-icon">🗑️</span>
+          <span class="swipe-label">Spam</span>
+        </button>
+        <button class="swipe-btn swipe-right" data-action="keep">
+          <span class="swipe-icon">→</span>
+          <span class="swipe-label">Keep</span>
+        </button>
       </div>
     </div>
 
-    <div class="action-buttons simple-actions">
-      <button class="action-btn spam" data-action="spam" title="Spam (←)">✕</button>
-      <button class="action-btn keep" data-action="keep" title="Keep (→)">✓</button>
+    <!-- Advanced Panel (Slide up when active) -->
+    <div id="advanced-panel" class="advanced-panel hidden">
+      <div class="advanced-header">
+        <span>Drag to sort</span>
+        <button id="btn-close-advanced" class="btn-close">✕</button>
+      </div>
+      
+      <div id="folder-zones" class="folder-zones">
+        <!-- Folders populated dynamically -->
+      </div>
+
+      <button id="btn-create-folder" class="btn-create-folder">
+        + Create New Folder
+      </button>
     </div>
 
-    <div id="folder-actions" class="folder-actions hidden">
-      <div class="folder-buttons">
-        <button class="folder-btn" data-action="archive">🗄️ Archive</button>
-        <button class="folder-btn" data-action="important">⭐ Important</button>
-        <button class="folder-btn" data-action="unsubscribe">📭 Unsubscribe</button>
-        <button class="folder-btn" data-action="block">🚫 Block</button>
+    <!-- Create Folder Modal -->
+    <div id="create-folder-modal" class="modal hidden">
+      <div class="modal-content">
+        <h3>Create New Folder</h3>
+        <p>This will create a folder in your email account.</p>
+        <input type="text" id="new-folder-name" placeholder="Folder name (e.g., 'Newsletters')" />
+        <div class="modal-actions">
+          <button id="btn-cancel-folder" class="btn-secondary">Cancel</button>
+          <button id="btn-confirm-folder" class="btn-primary">Create</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Note Modal (Optional - only when user clicks Notes button) -->
+    <div id="note-modal" class="modal hidden">
+      <div class="modal-content">
+        <h3>Add Note</h3>
+        <p class="note-context" id="note-context"></p>
+        <textarea id="note-input" placeholder="Why this decision? (e.g., 'Always keep receipts')" rows="3"></textarea>
+        <div class="modal-actions">
+          <button id="btn-cancel-note" class="btn-secondary">Cancel</button>
+          <button id="btn-save-note" class="btn-primary">Save Note</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>

@@ -1,158 +1,211 @@
 ---
 name: email-swipe
-description: Tinder-style email triage UI that generates training data for AI agents to learn your email preferences. Use when the user wants to (1) quickly sort through a cluttered inbox with swipe gestures, (2) train their AI agent (Claude Code, OpenClaw) how to handle emails automatically, (3) generate few-shot examples for LLM email classification, or (4) build a personalized email preference file for agent consumption. Creates local-first training data that teaches agents what to show, hide, prioritize, or flag based on user behavior.
+description: Tinder-style email triage UI with drag-and-drop sorting. Auto-detects email access, adapts to user's personal folders, and supports folder creation. Use when user wants to (1) train AI on email preferences with custom folders, (2) sort emails with full HTML preview, (3) create new email folders from the UI.
 ---
 
 # Email Swipe Skill
 
-Tinder-style **spam / keep** training UI. The agent owns email access; the UI only displays what the agent injects. All data stays local.
+Full-screen email cards with **simple 3-action mode** (Archive/Spam/Keep) and **advanced drag-and-drop** with personal folders.
 
-## When to use this skill
+## Quick Start
 
-- User wants to train an agent on email triage preferences
-- User has (or can set up) email access through the agent
-- User is willing to swipe ~30–50 emails in a local browser session
-
-## Full lifecycle (agent must follow)
-
-### Phase 1 — Install
-
-Pick one path with the user:
-
-| Method | Command |
-|--------|---------|
-| OpenClaw | `openclaw skills install github.com/EmailGuy42069/email-swipe` |
-| Git clone | `git clone https://github.com/EmailGuy42069/email-swipe.git` |
-| Already in workspace | use `./scripts/` from skill root |
-
-Requirements: **Python 3** only. No npm, no backend.
-
-### Phase 2 — Ask deployment preference (required)
-
-**Do not skip.** Ask: *"How do you want to run Email Swipe?"*
-
-See [references/deployment.md](references/deployment.md):
-
-- **Desktop** — `http://localhost:8765`
-- **Phone (same Wi‑Fi)** — LAN URL printed by `serve-ui.py`
-- **Demo first** — empty `emails.json` loads sample emails (not real training)
-- **OpenClaw** — `openclaw skills run email-swipe`
-
-Run preflight and share URLs:
+### Step 1: Detect Environment & Fetch Folders
 
 ```bash
-python scripts/preflight.py
-python scripts/serve-ui.py
+python3 scripts/detect-environment.py
 ```
 
-### Phase 3 — Verify email access (required before real training)
+This detects:
+- Email provider (gog, gmail-mcp, etc.)
+- User's personal Gmail folders/labels
+- Deployment environment
 
-**Do not start a real training session until the agent can pull mail.**
-
-Ask: *"Is your email connected so I can read your inbox?"*
-
-If **no** → help set up Gmail MCP, IMAP, Graph API, or whatever connector the environment supports. See [references/email-access.md](references/email-access.md).
-
-If **yes** → fetch a test batch (5 messages) to confirm fields, then fetch **30–50 inbox emails**.
-
-### Phase 4 — Inject inbox
+### Step 2: Fetch Emails + Folders
 
 ```bash
-python scripts/inject-emails.py /path/to/batch.json
+# Fetch emails with HTML content
+python3 scripts/fetch-emails-html.py --limit 50
+
+# Fetch user's personal folders
+python3 scripts/fetch-folders.py
 ```
 
-Email schema — include `html` when available:
+### Step 3: Configure UI with Personal Folders
+
+The agent must inject the user's folders into the UI. Create `assets/ui/config.json`:
 
 ```json
 {
-  "id": "msg-123",
-  "sender": "GitHub",
-  "from": "notifications@github.com",
-  "subject": "New PR opened",
-  "snippet": "Plain preview for training export",
-  "html": "<p>Full body (optional, sandboxed in UI)</p>",
-  "date": "2h ago",
-  "hasAttachment": false,
-  "isNewsletter": false
+  "folders": [
+    { "id": "spam", "label": "Spam", "icon": "🗑️", "color": "#ef4444" },
+    { "id": "archive", "label": "Archive", "icon": "🗄️", "color": "#6b7280" },
+    { "id": "keep", "label": "Keep", "icon": "✓", "color": "#10b981" },
+    { "id": "important", "label": "Important", "icon": "⭐", "color": "#f59e0b" },
+    { "id": "receipts", "label": "Receipts", "icon": "🧾", "color": "#3b82f6" },
+    { "id": "newsletters", "label": "Newsletters", "icon": "📰", "color": "#8b5cf6" }
+  ]
 }
 ```
 
-Example file: [references/email-batch.example.json](references/email-batch.example.json)
+**Include the user's actual Gmail labels** in the folders list.
 
-### Phase 5 — Training session
-
-1. Start server: `python scripts/serve-ui.py`
-2. User opens URL (desktop or phone)
-3. First card: **← Spam    Keep →** (instructions)
-4. User swipes left = spam, right = keep
-5. **Advanced toggle** — optional folder routing (archive, important, unsubscribe, block)
-6. Aim for **30–50 swipes** for useful training data
-
-**During session:** do not close the server. Preferences accumulate in browser IndexedDB.
-
-### Phase 6 — Export & import (required reminder)
-
-When the user finishes (or inbox is empty), **remind them explicitly:**
-
-> *"Tap the ⬇️ button to download `preferences.json`. Then share that file with me (or tell me where it saved) so I can import your email preferences."*
-
-The browser downloads to the user's Downloads folder. Import into the standard path:
+### Step 4: Start UI
 
 ```bash
-python scripts/import-preferences.py ~/Downloads/preferences.json
+python3 scripts/serve-ui.py
 ```
 
-Stored at: `~/.config/email-swipe/preferences.json`
+### Step 5: After User Exports
 
-**Agent:** read this file and use `fewShotExamples`, `senderRules`, and `patterns` for future email triage.
+Check for folder creation requests:
 
-### Phase 7 — Ongoing use
+```bash
+# User export includes preferences.json AND folder-requests.json
+python3 scripts/import-preferences.py ~/Downloads/preferences.json
 
-- **Retrain** — pull a fresh batch, new session, merge or replace preferences
-- **Live updates** — optional MCP: `python scripts/watch-preferences.py`
-- **Export from browser API** — `EmailSwipe.exportPreferences()` in devtools
+# Create requested folders in Gmail
+python3 scripts/create-folders.py ~/Downloads/folder-requests.json
+```
 
-## Agent conversation script
+## UI Modes
 
-Use this flow in natural language:
+### Normal Mode (Default)
+- Full-screen email cards with HTML rendering
+- **3 actions**: ← Archive | ↑ Spam | → Keep
+- Swipe gestures on mobile
+- Tap actions at bottom
 
-1. "Want to train me on your email preferences? I'll need access to your inbox."
-2. "How do you want to run the swipe UI — on this computer, or on your phone over Wi‑Fi?"
-3. *[verify mail access → fetch → inject]*
-4. "I've loaded N emails. Open [URL] and swipe left for spam, right for keep."
-5. *[after session]* "Please export your preferences (⬇️ button) and send me the file."
-6. *[import]* "Got it — I'll use these rules when triaging your mail."
+### Advanced Mode (⚙️ button)
+- Slide-up panel with **all personal folders**
+- Drag-and-drop or tap to sort
+- **"Create New Folder"** button
+- User can request custom folders
+
+## Folder Management
+
+### Fetching User's Folders
+
+Use `scripts/fetch-folders.py`:
+
+```python
+#!/usr/bin/env python3
+import subprocess
+import json
+
+result = subprocess.run(
+    ["/root/go/bin/gog", "gmail", "labels", "list", "-a", "blake@blakemcginn.com", "-j"],
+    capture_output=True, text=True
+)
+labels = json.loads(result.stdout)
+
+# Map to UI folder format
+folders = []
+for label in labels:
+    name = label.get('name', '')
+    if name in ['INBOX', 'SENT', 'DRAFT', 'TRASH', 'SPAM']:
+        continue
+    folders.append({
+        "id": name.lower().replace(' ', '-'),
+        "label": name,
+        "icon": "📁",
+        "color": "#6366f1"
+    })
+
+print(json.dumps(folders, indent=2))
+```
+
+### Creating Folders
+
+When export includes `folder-requests.json`:
+
+```bash
+python3 scripts/create-folders.py folder-requests.json
+```
+
+This creates the folders in Gmail via API.
+
+## Agent Workflow
+
+1. **"Let me fetch your emails and folders..."**
+   ```bash
+   python3 scripts/fetch-emails-html.py --limit 50
+   python3 scripts/fetch-folders.py > assets/ui/config.json
+   ```
+
+2. **"Starting UI with your folders..."**
+   ```bash
+   python3 scripts/serve-ui.py
+   ```
+
+3. **User sorts emails, may request new folders**
+
+4. **After export:**
+   - Import preferences
+   - Check for folder-requests.json
+   - Create any requested folders
+   - Confirm with user
+
+## Export Format
+
+### preferences.json
+```json
+{
+  "metadata": { "version": "1.4", "totalSwipes": 25 },
+  "folders": ["spam", "archive", "keep", "receipts", "newsletters"],
+  "swipes": [...],
+  "senderRules": {...}
+}
+```
+
+### folder-requests.json (if user created folders)
+```json
+{
+  "createFolders": [
+    { "name": "Work 2024", "requestedAt": "2026-07-01T11:30:00Z" },
+    { "name": "Travel Plans", "requestedAt": "2026-07-01T11:35:00Z" }
+  ]
+}
+```
 
 ## Architecture
 
-| Piece | Role |
-|-------|------|
-| `assets/ui/` | Static swipe UI (browser only) |
-| `emails.json` | Agent-written inbox queue (gitignored) |
-| IndexedDB | In-browser swipe storage |
-| `preferences.json` | Exported training data for agents |
-| `scripts/` | inject, serve, import, export, preflight, MCP watch |
+```
+User's Gmail
+    ↓
+[fetch-emails-html.py] → emails.json (with HTML)
+[fetch-folders.py] → config.json (personal folders)
+    ↓
+[serve-ui.py] → Serves UI with config
+    ↓
+User swipes in Normal mode OR Advanced drag-and-drop
+    ↓
+User may click "Create New Folder"
+    ↓
+User exports → preferences.json + folder-requests.json
+    ↓
+[import-preferences.py] → ~/.config/email-swipe/
+[create-folders.py] → Creates folders in Gmail
+    ↓
+Agent uses preferences for future email triage
+```
 
-## Scripts
+## Scripts Reference
 
 | Script | Purpose |
 |--------|---------|
-| `preflight.py` | Check inbox + print deployment URLs |
-| `inject-emails.py` | Write agent-fetched mail → `emails.json` |
-| `serve-ui.py` | Start local server (port 8765) |
-| `import-preferences.py` | Copy exported JSON → `~/.config/email-swipe/` |
-| `export-preferences.py` | Process raw swipe export (CLI) |
-| `watch-preferences.py` | MCP server for live preference reads |
+| `detect-environment.py` | Detect email provider and deployment |
+| `fetch-emails-html.py` | Fetch emails with full HTML content |
+| `fetch-folders.py` | Fetch user's Gmail labels/folders |
+| `serve-ui.py` | Serve UI with config |
+| `import-preferences.py` | Import exported preferences |
+| `create-folders.py` | Create requested folders in Gmail |
 
-## Resources
+## UI Files
 
-- [references/deployment.md](references/deployment.md) — desktop, mobile, OpenClaw
-- [references/email-access.md](references/email-access.md) — agent mail fetch guide
-- [references/email-batch.example.json](references/email-batch.example.json) — inject format
-
-## Privacy
-
-- UI never calls email APIs
-- OAuth/tokens stay in the **agent's** mail connector, not this skill
-- `preferences.json` contains sender/subject snippets — handle as sensitive
-- No telemetry, no cloud backend
+| File | Purpose |
+|------|---------|
+| `assets/ui/index.html` | Main UI |
+| `assets/ui/app.js` | Logic (Normal/Advanced modes, notes) |
+| `assets/ui/styles.css` | Dark theme, full-screen cards |
+| `assets/ui/config.json` | User's personal folders (agent-created) |
+| `assets/ui/emails.json` | Email data (agent-created) |
