@@ -1,0 +1,10 @@
+{
+  "name": "Email Swipe",
+  "short_name": "EmailSwipe",
+  "description": "Tinder-style email triage for AI agent training",
+  "start_url": "/?source=homescreen",
+  "display": "standalone",
+  "background_color": "#f8f9fb",
+  "theme_color": "#101828",
+  "orientation": "portrait"
+}

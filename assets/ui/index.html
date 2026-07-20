@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#f8f9fb">
+  <title>Email Swipe</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css?v=35">
+</head>
+<body>
+  <div id="app">
+    <header class="header">
+      <div class="header-left">
+        <span class="app-title">Email Swipe</span>
+        <span id="account-badge" class="account-badge hidden" title="Mailbox for this training session"></span>
+        <span id="progress-count" class="progress-label">0 / 0</span>
+      </div>
+      <div class="header-right">
+        <button id="btn-settings" class="btn-ghost" type="button" title="Advanced settings">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+          <span class="btn-label">Advanced settings</span>
+        </button>
+        <button id="btn-export" class="btn-ghost" type="button" title="Export training data">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span class="btn-label">Export</span>
+        </button>
+      </div>
+    </header>
+
+    <div id="status-banner" class="status-banner" role="status" aria-live="polite"></div>
+
+    <div class="progress-bar">
+      <div id="progress-fill" class="progress-fill"></div>
+    </div>
+
+    <div class="card-area">
+      <div id="empty-state" class="empty-state hidden">
+        <p class="empty-title">Waiting for emails</p>
+        <p class="empty-hint">Your agent will load your inbox, then refresh this page.</p>
+      </div>
+
+      <div id="card-stack" class="card-stack"></div>
+
+      <div id="victory-screen" class="victory-screen hidden" aria-hidden="true">
+        <div id="victory-stage" class="victory-stage">
+          <p id="victory-kicker" class="victory-kicker"></p>
+          <div id="victory-deck" class="victory-deck"></div>
+          <div class="victory-piles">
+            <div class="victory-pile pile-spam">
+              <span class="pile-label">Don't Keep</span>
+              <div class="pile-slot" data-pile="spam"></div>
+              <span class="pile-miss-count" hidden></span>
+            </div>
+            <div class="victory-pile pile-important">
+              <span class="pile-label">Important</span>
+              <div class="pile-slot" data-pile="important"></div>
+              <span class="pile-miss-count" hidden></span>
+            </div>
+            <div class="victory-pile pile-keep">
+              <span class="pile-label">Keep</span>
+              <div class="pile-slot" data-pile="keep"></div>
+              <span class="pile-miss-count" hidden></span>
+            </div>
+          </div>
+          <p id="victory-review-hint" class="victory-review-hint hidden">Tap a pile or email to review</p>
+        </div>
+        <div id="victory-insights" class="victory-insights hidden">
+          <div id="victory-compile-status" class="compile-status hidden" role="alert"></div>
+          <p id="victory-summary" class="victory-summary"></p>
+          <div id="victory-scorecard" class="victory-scorecard hidden">
+            <div id="victory-score-chart" class="victory-score-chart" aria-label="Agent guess scores by session"></div>
+          </div>
+          <div id="victory-misses" class="victory-misses"></div>
+          <pre id="victory-policy-brief" class="victory-policy-brief hidden" aria-label="What you taught your assistant"></pre>
+          <div class="victory-actions">
+            <button id="btn-victory-done" class="btn-primary" type="button">Save notes</button>
+            <button id="btn-train-again" class="btn-ghost" type="button">Train again</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-hints">
+        <span class="hint hint-spam">Don't keep ←</span>
+        <span class="hint hint-important">Important · double-tap</span>
+        <span class="hint hint-keep">Keep →</span>
+      </div>
+
+      <p id="folder-actions-hint" class="folder-actions-hint hidden">Tap a folder to file this email</p>
+    </div>
+
+    <div class="action-buttons simple-actions">
+      <button class="action-btn spam" data-action="spam" type="button" title="Don't keep (left)">Don't Keep</button>
+      <button class="action-btn important" data-action="important" type="button" title="Important (double-tap)">Important</button>
+      <button class="action-btn keep" data-action="keep" type="button" title="Keep (right)">Keep</button>
+    </div>
+
+    <div id="folder-actions" class="folder-actions hidden" aria-label="File to folder"></div>
+  </div>
+
+  <div id="batch-modal" class="batch-modal hidden" aria-hidden="true">
+    <div class="batch-backdrop" id="batch-backdrop"></div>
+    <div class="batch-sheet">
+      <p id="batch-message" class="batch-message"></p>
+      <div class="batch-actions">
+        <button id="batch-confirm" class="btn-primary" type="button">Yes, don't keep all</button>
+        <button id="batch-skip" class="btn-ghost" type="button">One at a time</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="pile-review-panel" class="review-panel hidden" aria-hidden="true">
+    <div class="review-backdrop" id="pile-review-backdrop"></div>
+    <div class="review-sheet">
+      <div class="review-header">
+        <h2 id="pile-review-title">Review pile</h2>
+        <button id="pile-review-close" class="btn-close" type="button">Close</button>
+      </div>
+      <div id="pile-review-list" class="review-list"></div>
+    </div>
+  </div>
+
+  <div id="email-review-panel" class="review-panel hidden" aria-hidden="true">
+    <div class="review-backdrop" id="email-review-backdrop"></div>
+    <div class="review-sheet">
+      <div class="review-header">
+        <button id="email-review-back" class="btn-close" type="button">Back</button>
+        <h2>Review email</h2>
+        <button id="email-review-close" class="btn-close" type="button">Close</button>
+      </div>
+      <div class="email-review-body">
+        <p id="email-review-sender" class="review-sender"></p>
+        <p id="email-review-subject" class="review-subject"></p>
+        <p id="email-review-snippet" class="review-snippet"></p>
+        <p class="review-field-label">Decision</p>
+        <div class="review-action-picker" id="email-review-actions">
+          <button type="button" class="review-action-btn spam" data-action="spam">Don't Keep</button>
+          <button type="button" class="review-action-btn important" data-action="important">Important</button>
+          <button type="button" class="review-action-btn keep" data-action="keep">Keep</button>
+        </div>
+        <label class="review-field-label" for="email-review-note">Note for your agent</label>
+        <textarea id="email-review-note" class="miss-note" rows="3" placeholder="Optional — explain this decision"></textarea>
+        <button id="email-review-save" class="btn-primary" type="button">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="folder-picker-modal" class="batch-modal hidden" aria-hidden="true">
+    <div class="batch-backdrop" id="folder-picker-backdrop"></div>
+    <div class="batch-sheet folder-picker-sheet">
+      <p class="folder-picker-title">Route this mail</p>
+      <p id="folder-picker-subject" class="folder-picker-subject"></p>
+      <div id="folder-picker-options" class="folder-picker-options"></div>
+      <button id="folder-picker-skip" class="btn-ghost" type="button">No folder — don't keep only</button>
+    </div>
+  </div>
+
+  <div id="settings-panel" class="settings-panel hidden" aria-hidden="true">
+    <div class="settings-backdrop" id="settings-backdrop"></div>
+    <div class="settings-sheet settings-sheet-tabs">
+      <div class="settings-header">
+        <h2>Advanced settings</h2>
+        <button id="settings-close" class="btn-close" type="button">Close</button>
+      </div>
+      <p class="settings-lead">Training preferences and how your agent uses them.</p>
+      <p id="settings-save-status" class="settings-save-status hidden" role="status"></p>
+
+      <nav class="settings-tabs" role="tablist" aria-label="Settings sections">
+        <button type="button" class="settings-tab active" data-tab="agent" role="tab" aria-selected="true">Agent</button>
+        <button type="button" class="settings-tab" data-tab="training" role="tab" aria-selected="false">Training</button>
+        <button type="button" class="settings-tab" data-tab="rhythm" role="tab" aria-selected="false">Rhythm</button>
+        <button type="button" class="settings-tab" data-tab="rules" role="tab" aria-selected="false">Rules</button>
+        <button type="button" class="settings-tab" data-tab="inboxes" role="tab" aria-selected="false">Inboxes</button>
+        <button type="button" class="settings-tab" data-tab="sorting" role="tab" aria-selected="false">Sorting</button>
+        <button type="button" class="settings-tab" data-tab="access" role="tab" aria-selected="false">Access</button>
+        <button type="button" class="settings-tab" data-tab="context" role="tab" aria-selected="false">Context</button>
+      </nav>
+
+      <div class="settings-tab-panels">
+        <section id="settings-tab-agent" class="settings-tab-panel active" role="tabpanel">
+          <label class="settings-field">
+            <span>Agent name</span>
+            <input type="text" id="set-agent-name" placeholder="Your agent" autocomplete="off">
+          </label>
+          <label class="settings-row">
+            <input type="checkbox" id="set-agent-enabled">
+            <span>Let my agent review inbox after training</span>
+          </label>
+          <p class="settings-field-label">Autonomy level</p>
+          <div class="autonomy-segmented" id="set-autonomy-level" role="group" aria-label="Autonomy level">
+            <button type="button" class="autonomy-option" data-level="recommend">Recommend</button>
+            <button type="button" class="autonomy-option" data-level="approve_batch">Approve batch</button>
+            <button type="button" class="autonomy-option" data-level="auto_safe">Auto safe</button>
+          </div>
+          <p class="settings-note">Recommend-only by default. Higher levels need your confirmation — your agent uses the compiled brief and does not auto-delete mail.</p>
+          <button id="btn-autonomy-docs" class="btn-ghost settings-doc-link" type="button">Autonomy tiers explained</button>
+        </section>
+
+        <section id="settings-tab-training" class="settings-tab-panel" role="tabpanel" hidden>
+          <div id="training-session-summary" class="training-readout">
+            <p class="settings-note">Open after a session to see scores and gaps.</p>
+          </div>
+          <p id="training-agreement" class="training-stat hidden"></p>
+          <ul id="training-gaps-list" class="training-gaps-list"></ul>
+          <div class="settings-divider"></div>
+          <button id="btn-settings-train-again" class="btn-ghost settings-doc-link" type="button">Train again</button>
+          <button id="btn-settings-export" class="btn-ghost settings-doc-link" type="button">Export training data</button>
+          <p id="training-compile-hint" class="settings-note"></p>
+        </section>
+
+        <section id="settings-tab-rhythm" class="settings-tab-panel" role="tabpanel" hidden>
+          <label class="settings-field">
+            <span>Inbox check-in frequency</span>
+            <select id="set-scan-frequency">
+              <option value="off">Off</option>
+              <option value="daily">Daily</option>
+              <option value="twice_daily">Twice daily</option>
+              <option value="weekly">Weekly</option>
+            </select>
+          </label>
+          <label class="settings-field">
+            <span>Preferred check-in times</span>
+            <input type="text" id="set-preferred-times" placeholder="08:00, 17:00">
+          </label>
+          <label class="settings-field">
+            <span>Digest style</span>
+            <select id="set-digest-style">
+              <option value="short">Short</option>
+              <option value="detailed">Detailed</option>
+            </select>
+          </label>
+          <label class="settings-row">
+            <input type="checkbox" id="set-include-score-trend" checked>
+            <span>Include score trend in summaries</span>
+          </label>
+          <p class="settings-field-label">Include in digest</p>
+          <label class="settings-row"><input type="checkbox" class="set-digest-section" value="needs_reply" checked> Needs reply</label>
+          <label class="settings-row"><input type="checkbox" class="set-digest-section" value="score_trend" checked> Score trend</label>
+          <label class="settings-row"><input type="checkbox" class="set-digest-section" value="training_gaps" checked> Training gaps</label>
+          <label class="settings-row"><input type="checkbox" class="set-digest-section" value="promos"> Promotions</label>
+          <p class="settings-note">Rhythm is guidance for your agent — Email Swipe does not run cron or push notifications.</p>
+        </section>
+
+        <section id="settings-tab-rules" class="settings-tab-panel" role="tabpanel" hidden>
+          <label class="settings-field">
+            <span>Platform rules mode</span>
+            <select id="set-platform-mode">
+              <option value="suggest_only">Suggest only</option>
+              <option value="assist">Assist</option>
+            </select>
+          </label>
+          <label class="settings-row">
+            <input type="checkbox" id="set-never-remove-inbox" checked>
+            <span>Never remove from inbox without approval</span>
+          </label>
+          <label class="settings-field">
+            <span>Max suggested rules</span>
+            <input type="number" id="set-max-rules" min="1" max="50" value="12">
+          </label>
+          <p class="settings-field-label">Allowed actions</p>
+          <label class="settings-row"><input type="checkbox" class="set-allowed-action" value="label" checked> Label</label>
+          <label class="settings-row"><input type="checkbox" class="set-allowed-action" value="star" checked> Star</label>
+          <label class="settings-row"><input type="checkbox" class="set-allowed-action" value="archive"> Archive</label>
+          <p class="settings-field-label">Forbidden actions</p>
+          <label class="settings-row"><input type="checkbox" class="set-forbidden-action" value="delete" checked> Delete</label>
+          <label class="settings-row"><input type="checkbox" class="set-forbidden-action" value="skip_inbox" checked> Skip inbox</label>
+          <label class="settings-row"><input type="checkbox" class="set-forbidden-action" value="auto_archive" checked> Auto-archive</label>
+          <label class="settings-row"><input type="checkbox" class="set-forbidden-action" value="block_sender" checked> Block sender</label>
+        </section>
+
+        <section id="settings-tab-access" class="settings-tab-panel" role="tabpanel" hidden>
+          <label class="settings-row">
+            <input type="checkbox" id="set-explore-remote">
+            <span>Explore remote access (UI from anywhere)</span>
+          </label>
+          <div id="remote-access-section" class="settings-section hidden">
+            <p class="settings-note">For technical users: always-on URL like your Telegram agent. Email Swipe does not host this — you run Tailscale, a VPS, or a tunnel on the same machine as your agent.</p>
+            <button id="btn-remote-access-docs" class="btn-ghost settings-doc-link" type="button">Remote access options</button>
+          </div>
+          <div class="settings-divider"></div>
+          <p class="settings-field-label">Connection</p>
+          <p id="settings-runtime-status" class="settings-runtime-line">Checking server…</p>
+          <p id="settings-desktop-url" class="settings-runtime-line settings-url"></p>
+          <p id="settings-mobile-url" class="settings-runtime-line settings-url"></p>
+          <p class="settings-note">Add to Home Screen works with a stable HTTPS or LAN URL while <code>serve-ui.py</code> is running.</p>
+          <div class="settings-divider"></div>
+          <p class="settings-field-label">Add to Home Screen</p>
+          <ol class="access-install-steps">
+            <li>Start <code>serve-ui.py</code> on your laptop.</li>
+            <li>On your phone (same Wi‑Fi), open the <strong>Mobile URL</strong> above.</li>
+            <li><strong>iOS Safari:</strong> Share → Add to Home Screen.</li>
+            <li><strong>Android Chrome:</strong> Menu → Install app / Add to Home Screen.</li>
+          </ol>
+          <p class="settings-note">The icon opens full-screen training UI. Mail still requires your agent to inject a batch — Email Swipe does not fetch mail on its own.</p>
+        </section>
+
+        <section id="settings-tab-inboxes" class="settings-tab-panel" role="tabpanel" hidden>
+          <label class="settings-row">
+            <input type="checkbox" id="set-unified-inbox">
+            <span>Unified inbox (multiple accounts)</span>
+          </label>
+          <div id="unified-inbox-section" class="settings-section hidden">
+            <p class="settings-note">Train one mailbox at a time. Your agent registers accounts in chat and merges rules into one brief.</p>
+            <label class="settings-field">
+              <span>Default mailbox for inject</span>
+              <select id="set-default-account">
+                <option value="">—</option>
+              </select>
+            </label>
+            <div id="inbox-accounts-table" class="inbox-accounts-table"></div>
+            <p class="settings-note">Ask your agent to add or edit mailboxes — Email Swipe does not connect to mail here.</p>
+            <button id="btn-copy-account-shape" class="btn-ghost settings-doc-link" type="button">Copy account JSON shape</button>
+            <pre id="inbox-account-shape" class="settings-code-sample hidden" aria-hidden="true"></pre>
+            <button id="btn-unified-inbox-docs" class="btn-ghost settings-doc-link" type="button">How unified inbox works</button>
+          </div>
+        </section>
+
+        <section id="settings-tab-sorting" class="settings-tab-panel" role="tabpanel" hidden>
+          <label class="settings-row">
+            <input type="checkbox" id="set-advanced-routing">
+            <span>Unlock advanced folder routing</span>
+          </label>
+          <p class="settings-note">Use <strong>AI rule</strong> or <strong>Smart category</strong> for judgment-based routing. Use <strong>Strict</strong> for exact matches.</p>
+          <div id="advanced-routing-section" class="settings-section hidden">
+            <h3>Folder routes</h3>
+            <p class="settings-note">When on, folder buttons replace left/right/double-tap. Routes stay suggest-only.</p>
+            <div class="match-mode-legend">
+              <p class="match-mode-item"><strong>AI rule</strong> — plain English; your agent judges at runtime.</p>
+              <p class="match-mode-item"><strong>Smart category</strong> — built-in types (promotions, newsletters…).</p>
+              <p class="match-mode-item"><strong>Strict</strong> — exact keyword, domain, or sender.</p>
+            </div>
+            <label class="settings-field">
+              <span>Folder complexity</span>
+              <select id="set-folder-preference">
+                <option value="minimal">Minimal (2–3 folders)</option>
+                <option value="moderate">Moderate (up to 5)</option>
+                <option value="many">Many (full routing map)</option>
+              </select>
+            </label>
+            <div id="folder-routes-list" class="folder-routes-list"></div>
+            <button id="btn-add-folder-route" class="btn-ghost settings-add-route" type="button">+ Add route</button>
+          </div>
+        </section>
+
+        <section id="settings-tab-context" class="settings-tab-panel" role="tabpanel" hidden>
+          <div class="context-agent-banner">
+            Calendar, projects, and relationships — manage in your agent, not here. Email Swipe does not run a life-context interview.
+          </div>
+          <label class="settings-field">
+            <span>Problem to solve</span>
+            <input type="text" id="set-problem-to-solve" placeholder="e.g. Tame promo noise without missing invoices">
+          </label>
+          <label class="settings-field">
+            <span>Optional notes for your agent</span>
+            <textarea id="set-context-notes" rows="4" placeholder="Anything your agent should remember when applying rules"></textarea>
+          </label>
+          <div class="settings-divider"></div>
+          <p class="settings-field-label">Discovery snapshot</p>
+          <div id="context-discovery-snapshot" class="context-discovery-snapshot">
+            <p class="settings-note">No intake session yet — your agent captures this during setup.</p>
+          </div>
+        </section>
+      </div>
+
+      <button id="settings-save" class="settings-save" type="button">Save</button>
+    </div>
+  </div>
+
+  <script src="folder-intent.js?v=2"></script>
+  <script src="app.js?v=35"></script>
+</body>
+</html>

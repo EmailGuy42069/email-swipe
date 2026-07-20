@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Remote access — Email Swipe</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.55;
+      max-width: 44rem;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 3rem;
+      background: #f8f9fb;
+      color: #1a1d24;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { background: #12141a; color: #e8eaef; }
+      a { color: #7eb8ff; }
+      th, td { border-color: #333; }
+    }
+    h1 { font-size: 1.5rem; margin-top: 0; }
+    h2 { font-size: 1.05rem; margin-top: 1.75rem; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.88rem; margin: 1rem 0; }
+    th, td { border: 1px solid #ccc; padding: 0.45rem 0.55rem; text-align: left; vertical-align: top; }
+    th { background: rgba(0,0,0,0.04); }
+    .lead { color: #444; }
+    @media (prefers-color-scheme: dark) { .lead { color: #aaa; } }
+    .back { display: inline-block; margin-bottom: 1rem; font-size: 0.9rem; }
+    ul { padding-left: 1.2rem; }
+  </style>
+</head>
+<body>
+  <a class="back" href="index.html">← Back to Email Swipe</a>
+  <h1>Access UI from anywhere</h1>
+  <p class="lead">For technical users who want this training UI and settings on a stable URL — like reaching your agent via Telegram. Email Swipe does not host this for you; you run the stack.</p>
+
+  <h2>Recommended setup</h2>
+  <p><strong>One always-on machine</strong> (home server or small VPS) running:</p>
+  <ul>
+    <li>Your agent + Telegram bot</li>
+    <li><code>serve-ui.py</code> + MCP <code>watch-preferences.py</code></li>
+    <li>Data in <code>~/.config/email-swipe/</code></li>
+  </ul>
+  <p>Reach the UI via <strong>Tailscale</strong> (private) or <strong>HTTPS + auth</strong> on a VPS.</p>
+
+  <h2>Options at a glance</h2>
+  <table>
+    <tr><th>Option</th><th>Good for</th></tr>
+    <tr><td>Tailscale / ZeroTier</td><td>Private access to home server — best default for power users</td></tr>
+    <tr><td>VPS + persistent disk</td><td>Public URL; run agent + UI on same box</td></tr>
+    <tr><td>Cloudflare Tunnel</td><td>Home server without opening firewall ports</td></tr>
+    <tr><td>ngrok</td><td>Quick tests; weak for daily use on free tier</td></tr>
+    <tr><td>Same Wi‑Fi only</td><td>Mobile URL from server — no extra setup</td></tr>
+  </table>
+
+  <h2>Security</h2>
+  <p>Training data is sensitive (senders, subjects, rules). Do not expose an unauthenticated UI to the public internet. Prefer Tailscale or HTTPS with login.</p>
+
+  <h2>Phone home screen</h2>
+  <p>After you have a stable URL: open in Safari/Chrome → <strong>Add to Home Screen</strong>. The server must keep running on your host.</p>
+
+  <h2>Ask your agent</h2>
+  <p>With <em>Explore remote access</em> enabled in Settings → Access, your agent can walk you through Tailscale, VPS, or tunnel setup using the full runbook in <code>references/remote-access-power-user.md</code>.</p>
+
+  <p><a href="index.html">Return to training</a></p>
+</body>
+</html>

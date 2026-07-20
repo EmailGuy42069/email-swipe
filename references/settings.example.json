@@ -1,0 +1,9 @@
+{
+  "version": "2.0",
+  "agent": {
+    "enabled": false,
+    "name": ""
+  },
+  "advancedMode": false,
+  "customFolders": []
+}

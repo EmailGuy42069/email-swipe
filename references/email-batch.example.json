@@ -1,0 +1,16 @@
+# Email Swipe — example batch for inject-emails.py
+# Agent: fetch real emails from the user's inbox and write in this format.
+
+[
+  {
+    "id": "msg-001",
+    "sender": "GitHub",
+    "from": "notifications@github.com",
+    "subject": "New pull request opened",
+    "snippet": "Short plain-text preview used in training export.",
+    "html": "<p>Optional full HTML body for the swipe card.</p>",
+    "date": "2h ago",
+    "hasAttachment": false,
+    "isNewsletter": false
+  }
+]

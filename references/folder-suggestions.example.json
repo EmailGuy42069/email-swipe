@@ -1,0 +1,22 @@
+{
+  "version": "1.0",
+  "folderPreference": "moderate",
+  "suggestions": [
+    {
+      "name": "Needs Attention",
+      "type": "agent_managed",
+      "reason": "Agent-curated folder for mail that needs your attention (not auto-filtered)",
+      "confidence": 1.0,
+      "preservesInbox": true,
+      "implementation": "agent_watchlist"
+    },
+    {
+      "name": "Newsletters",
+      "type": "user_folder",
+      "reason": "Newsletter and digest pattern",
+      "confidence": 0.8,
+      "preservesInbox": true,
+      "implementation": "platform_label"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+# OPTIONAL — maintainer example only. Customers do NOT need Render.
+#
+# Email Swipe is local-first: run `python scripts/serve-ui.py` on the user's machine.
+# Artifacts persist under ~/.config/email-swipe/ on that machine.
+#
+# This Blueprint deploys the UI to Render's cloud. Without a persistent disk or
+# external storage, training data may be lost on restart/redeploy.
+# See references/deployment.md and docs/IMPLEMENTATION-CHECKLIST.md (P0-1).
+
+services:
+  - type: web
+    name: email-swipe-ui
+    runtime: python
+    buildCommand: ""
+    startCommand: python scripts/serve-ui.py
+    envVars:
+      - key: PORT
+        value: 10000

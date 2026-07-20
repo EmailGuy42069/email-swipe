@@ -1,0 +1,24 @@
+{
+  "version": "1.0",
+  "mode": "suggest_only",
+  "policy": {
+    "neverRemoveFromInbox": true,
+    "allowedActions": ["label", "star"],
+    "forbiddenActions": ["delete", "skip_inbox", "auto_archive", "block_sender"],
+    "note": "Suggestions only. Labels do not hide mail from the inbox."
+  },
+  "suggestions": [
+    {
+      "id": "domain-linkedin-com",
+      "match": { "type": "domain", "value": "linkedin.com" },
+      "suggestedAction": "label",
+      "labelName": "Low Priority",
+      "reason": "Often archived after inbox review",
+      "confidence": 0.85,
+      "evidence": { "swipeCount": 5, "action": "archive" },
+      "preservesInbox": true,
+      "requiresUserConfirmation": true,
+      "autoApply": false
+    }
+  ]
+}

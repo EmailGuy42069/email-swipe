@@ -1,0 +1,21 @@
+{
+  "policies": [
+    {
+      "match": { "domain": "linkedin.com" },
+      "action": "dont_keep",
+      "reason": "Promotional job alerts — don't keep"
+    },
+    {
+      "match": { "domain": "mailchimp.com" },
+      "action": "dont_keep",
+      "reason": "Newsletter promos"
+    }
+  ],
+  "relationships": [
+    {
+      "match": { "sender": "hr@company.com" },
+      "type": "important_sender",
+      "reason": "HR and benefits — always important"
+    }
+  ]
+}

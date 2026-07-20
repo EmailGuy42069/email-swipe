@@ -1,0 +1,43 @@
+{
+  "version": "1.0",
+  "phase": "recommended",
+  "createdAt": "2026-07-07T12:00:00Z",
+  "updatedAt": "2026-07-07T12:05:00Z",
+  "signals": {
+    "hasPolicyGraph": false,
+    "hasCalibration": false,
+    "hasPreferences": false,
+    "priorSwipeCount": 0,
+    "trainingGapCount": 0
+  },
+  "discovery": {
+    "hasExistingRules": true,
+    "rulesSource": "agent_memory",
+    "priorSwipeSessions": false,
+    "goal": "import_rules",
+    "demoFirst": false,
+    "problemToSolve": "Vendor pitches vs real work email",
+    "deployment": "desktop"
+  },
+  "recommendedPath": "calibrate",
+  "recommendationReason": "You already have email rules — import them, then swipe only edge cases where confidence is low.",
+  "pathOptions": [
+    {
+      "id": "bootstrap",
+      "label": "Bootstrap — swipe a broad inbox sample to learn your patterns from scratch",
+      "recommended": false
+    },
+    {
+      "id": "calibrate",
+      "label": "Calibrate — import existing rules, then swipe only emails I am uncertain about",
+      "recommended": true
+    },
+    {
+      "id": "refine",
+      "label": "Refine — short follow-up session on specific gaps from prior training",
+      "recommended": false
+    }
+  ],
+  "selectedPath": null,
+  "confirmedAt": null
+}

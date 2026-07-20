@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://emailaiguy.com/schemas/email-batch.schema.json",
+  "title": "Email Swipe batch",
+  "type": "object",
+  "required": ["emails"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "sessionMode": {
+          "type": ["string", "null"],
+          "enum": ["bootstrap", "calibrate", "refine", "import-sorting", null]
+        },
+        "intakePath": {
+          "type": ["string", "null"],
+          "enum": ["bootstrap", "calibrate", "refine", "import-sorting", null]
+        },
+        "accountId": {
+          "type": ["string", "null"],
+          "description": "Mailbox slug when unified inbox is enabled"
+        },
+        "accountLabel": { "type": ["string", "null"] },
+        "demo": { "type": "boolean" },
+        "generatedAt": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "emails": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "sender", "from", "subject", "snippet"],
+        "properties": {
+          "id": { "type": "string" },
+          "sender": { "type": "string" },
+          "from": { "type": "string" },
+          "subject": { "type": "string" },
+          "snippet": { "type": "string" },
+          "html": { "type": "string" },
+          "date": { "type": "string" },
+          "hasAttachment": { "type": "boolean" },
+          "isNewsletter": { "type": "boolean" },
+          "predictedAction": { "type": ["string", "null"], "enum": ["spam", "keep", "important", null] },
+          "predictionConfidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+          "agentNote": { "type": "string" },
+          "folderJudgments": { "type": "array" },
+          "aiSuggestedFolderRouteId": { "type": ["string", "null"] },
+          "aiSuggestedFolderConfidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+          "aiSuggestedFolderReason": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

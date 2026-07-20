@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "agentEnabled": true,
+  "scanFrequency": "twice_daily",
+  "needsAttentionFolder": {
+    "name": "Needs Attention",
+    "description": "Agent-populated. Mail here still exists in the inbox unless the user moves it.",
+    "populatedBy": "agent_only"
+  },
+  "userContext": {
+    "job": "PM at a startup",
+    "problemToSolve": "Newsletters bury real work mail"
+  },
+  "watchRules": [
+    {
+      "id": "urgent-keyword-action-required",
+      "priority": "high",
+      "folder": "Needs Attention",
+      "trigger": { "subjectOrSnippetContains": "action required" },
+      "instruction": "Surface in Needs Attention. Summarize deadline or action.",
+      "requiresReasoning": true
+    }
+  ],
+  "runtimeGuidance": {
+    "tokenBudget": "Metadata only; LLM only for watchlist matches.",
+    "neverAutoDelete": true,
+    "neverSkipInboxWithoutApproval": true
+  }
+}

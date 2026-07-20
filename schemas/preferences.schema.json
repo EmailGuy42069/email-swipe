@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://emailaiguy.com/schemas/preferences.schema.json",
+  "title": "Email Swipe preferences",
+  "type": "object",
+  "required": ["metadata", "settings", "swipes"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["generatedAt", "totalSwipes", "version"],
+      "properties": {
+        "generatedAt": { "type": "string" },
+        "totalSwipes": { "type": "integer", "minimum": 0 },
+        "version": { "type": "string" },
+        "sessionMode": { "type": ["string", "null"] },
+        "intakePath": { "type": ["string", "null"] },
+        "accountId": { "type": ["string", "null"] },
+        "accountLabel": { "type": ["string", "null"] },
+        "agentReview": {
+          "type": "object",
+          "properties": {
+            "scorablePredictions": { "type": "integer", "minimum": 0 },
+            "correctPredictions": { "type": "integer", "minimum": 0 },
+            "misses": { "type": "array" }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "settings": {
+      "type": "object",
+      "properties": {
+        "agent": { "type": "object" },
+        "folders": { "type": "object" },
+        "unifiedInbox": { "type": "object" },
+        "platformRules": { "type": "object" },
+        "context": { "type": "object" }
+      },
+      "additionalProperties": true
+    },
+    "swipes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["emailId", "action", "timestamp"],
+        "properties": {
+          "emailId": { "type": "string" },
+          "sender": { "type": "string" },
+          "from": { "type": "string" },
+          "subject": { "type": "string" },
+          "snippet": { "type": "string" },
+          "action": { "type": "string", "enum": ["spam", "keep", "important"] },
+          "accountId": { "type": ["string", "null"] },
+          "timestamp": { "type": "string" },
+          "batch": { "type": "boolean" },
+          "correctionNote": { "type": "string" },
+          "predictedAction": { "type": "string" },
+          "predictionConfidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "folderRoute": {
+            "type": "object",
+            "properties": {
+              "routeId": { "type": ["string", "null"] },
+              "folderName": { "type": ["string", "null"] },
+              "matchType": { "type": ["string", "null"] },
+              "matchMode": { "type": ["string", "null"] },
+              "matchValue": {},
+              "intent": { "type": ["string", "null"] },
+              "aiRule": { "type": ["string", "null"] },
+              "description": { "type": ["string", "null"] },
+              "matchScore": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+              "matchReason": { "type": ["string", "null"] },
+              "judgmentSource": { "type": ["string", "null"] },
+              "userSelected": { "type": "boolean" },
+              "suggestOnly": { "type": "boolean" }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

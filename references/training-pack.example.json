@@ -1,0 +1,26 @@
+{
+  "version": "2.0",
+  "swipeCount": 18,
+  "summary": "3 label suggestions, 2 folder ideas, 8 agent watch rules",
+  "settings": {
+    "agent": { "enabled": true },
+    "context": { "problemToSolve": "Newsletters bury HR deadlines" }
+  },
+  "examples": [
+    {
+      "email": {
+        "subject": "Action required: Benefits enrollment",
+        "sender": "HR Department",
+        "snippet": "Open enrollment closes Friday.",
+        "from": "hr@company.com"
+      },
+      "decision": "needs_attention"
+    }
+  ],
+  "platformCandidates": [],
+  "watchRules": [],
+  "needsAttentionFolder": {
+    "name": "Needs Attention",
+    "populatedBy": "agent_only"
+  }
+}

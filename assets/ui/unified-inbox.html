@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unified inbox — Email Swipe</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.55;
+      max-width: 42rem;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 3rem;
+      background: #f8f9fb;
+      color: #1a1d24;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { background: #12141a; color: #e8eaef; }
+      a { color: #7eb8ff; }
+      th, td { border-color: #333; }
+    }
+    h1 { font-size: 1.5rem; margin-top: 0; }
+    h2 { font-size: 1.1rem; margin-top: 2rem; }
+    p, li { font-size: 0.95rem; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; margin: 1rem 0; }
+    th, td { border: 1px solid #ccc; padding: 0.4rem 0.6rem; text-align: left; }
+    th { background: rgba(0,0,0,0.04); }
+    code { font-size: 0.85em; }
+    .lead { font-size: 1.05rem; color: #444; }
+    @media (prefers-color-scheme: dark) { .lead { color: #aaa; } }
+    .back { display: inline-block; margin-bottom: 1rem; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <a class="back" href="index.html">← Back to Email Swipe</a>
+  <h1>Unified inbox (multiple accounts)</h1>
+  <p class="lead">Train one mailbox at a time. Your agent merges rules into one brief. You keep reading mail in Gmail, Apple Mail, or Outlook — we do not host your email.</p>
+
+  <h2>When to use this</h2>
+  <p>Turn this on when you have <strong>more than one mailbox</strong> (work + personal, etc.) and want the same agent to sort all of them with separate rules per account.</p>
+  <p>Leave it off if you only use one inbox — nothing changes for you.</p>
+
+  <h2>What changes for you</h2>
+  <table>
+    <tr><th>Before</th><td>Agent has no memory of how you sort mail</td></tr>
+    <tr><th>Training</th><td>~15–30 min <strong>per account</strong> — swipe or learn from folders</td></tr>
+    <tr><th>After</th><td>One brief with a section per inbox; agent recommends actions in chat</td></tr>
+    <tr><th>Your mail apps</th><td>Unchanged — same Gmail / Apple Mail / Outlook</td></tr>
+  </table>
+
+  <h2>How a session works</h2>
+  <ol>
+    <li>Your agent registers each mailbox (name, provider) in settings — in chat, not in this form.</li>
+    <li>Agent loads mail for <strong>one account</strong> and starts the swipe UI.</li>
+    <li>Header shows which account you are training.</li>
+    <li>Repeat for each mailbox.</li>
+    <li>Agent reads the combined brief with you and helps triage new mail going forward.</li>
+  </ol>
+
+  <h2>What we do not do</h2>
+  <ul>
+    <li>Host or store your mail on our servers</li>
+    <li>Replace your mail app</li>
+    <li>Auto-delete or hide mail without your approval</li>
+    <li>Ask for your life story — if your agent already knows your calendar or projects, it uses that on its own</li>
+  </ul>
+
+  <h2>Agent / technical details</h2>
+  <p>Full runbook for agents: <code>references/unified-inbox.md</code> in the repo.</p>
+  <p>Human journey overview: <code>references/your-agent-before-and-after.md</code>.</p>
+
+  <p><a href="index.html">Return to training</a></p>
+</body>
+</html>

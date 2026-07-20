@@ -1,0 +1,134 @@
+[
+  {
+    "id": "test-001",
+    "sender": "LinkedIn",
+    "from": "jobs@linkedin.com",
+    "subject": "12 new jobs match your profile",
+    "snippet": "See who's hiring. Unsubscribe from job alerts.",
+    "html": "<div style=\"font-family:sans-serif\"><p>Your weekly job digest.</p><p style=\"font-size:12px;color:#666\"><a href=\"#\">Unsubscribe</a></p></div>",
+    "date": "10m ago",
+    "hasAttachment": false,
+    "isNewsletter": true
+  },
+  {
+    "id": "test-002",
+    "sender": "LinkedIn",
+    "from": "notifications@linkedin.com",
+    "subject": "Someone viewed your profile",
+    "snippet": "5 people viewed your profile this week.",
+    "html": "<p>Profile views are up 20%.</p>",
+    "date": "1h ago",
+    "hasAttachment": false,
+    "isNewsletter": true
+  },
+  {
+    "id": "test-003",
+    "sender": "HR Team",
+    "from": "hr@acmecorp.com",
+    "subject": "Action required: Open enrollment ends Friday",
+    "snippet": "Choose your health plan by end of day Friday. Deadline approaching.",
+    "html": "<p><strong>Action required</strong> — benefits enrollment closes Friday at 5pm.</p>",
+    "date": "2h ago",
+    "hasAttachment": true,
+    "isNewsletter": false
+  },
+  {
+    "id": "test-004",
+    "sender": "Your Manager",
+    "from": "sarah.chen@acmecorp.com",
+    "subject": "Q3 priorities — need your input",
+    "snippet": "Can you review the doc before our 1:1 tomorrow?",
+    "html": "<p>Hi — attached the draft roadmap. Would love your thoughts before Thursday.</p>",
+    "date": "3h ago",
+    "hasAttachment": true,
+    "isNewsletter": false
+  },
+  {
+    "id": "test-005",
+    "sender": "Amazon",
+    "from": "shipment-tracking@amazon.com",
+    "subject": "Your package was delivered",
+    "snippet": "Left at front door. Order #112-8847291.",
+    "html": "<p>Delivered today at 2:14 PM.</p>",
+    "date": "4h ago",
+    "hasAttachment": false,
+    "isNewsletter": false
+  },
+  {
+    "id": "test-006",
+    "sender": "Groupon",
+    "from": "deals@groupon.com",
+    "subject": "90% OFF spa day — TODAY ONLY",
+    "snippet": "Limited time deal near you. Unsubscribe.",
+    "html": "<p style=\"color:red;font-size:20px\">MEGA SALE!!!</p><p><a href=\"#\">Unsubscribe</a></p>",
+    "date": "5h ago",
+    "hasAttachment": false,
+    "isNewsletter": true
+  },
+  {
+    "id": "test-007",
+    "sender": "Stripe",
+    "from": "receipts@stripe.com",
+    "subject": "Receipt for $29.00 from Notion",
+    "snippet": "Payment confirmation. Invoice attached.",
+    "html": "<table><tr><td>Notion Plus</td><td>$29.00</td></tr></table>",
+    "date": "6h ago",
+    "hasAttachment": true,
+    "isNewsletter": false
+  },
+  {
+    "id": "test-008",
+    "sender": "Google",
+    "from": "no-reply@accounts.google.com",
+    "subject": "Security alert: new sign-in on Mac",
+    "snippet": "If this was you, no action needed. Otherwise secure your account.",
+    "html": "<p><strong>Security alert</strong> — new sign-in detected.</p>",
+    "date": "Yesterday",
+    "hasAttachment": false,
+    "isNewsletter": false
+  },
+  {
+    "id": "test-009",
+    "sender": "Substack",
+    "from": "read@substack.com",
+    "subject": "The Pragmatic Engineer — new post",
+    "snippet": "How big tech does on-call. 8 min read.",
+    "html": "<p>Weekly newsletter digest.</p><p><a href=\"#\">Unsubscribe</a></p>",
+    "date": "Yesterday",
+    "hasAttachment": false,
+    "isNewsletter": true
+  },
+  {
+    "id": "test-010",
+    "sender": "Vendor CRM",
+    "from": "alex@salesloft.io",
+    "subject": "Quick question about your email workflow",
+    "snippet": "Would love 15 minutes to show you how teams automate triage.",
+    "html": "<p>Hi — reaching out because I saw you're evaluating inbox tools...</p>",
+    "date": "Yesterday",
+    "hasAttachment": false,
+    "isNewsletter": false
+  },
+  {
+    "id": "test-011",
+    "sender": "Payroll",
+    "from": "payroll@acmecorp.com",
+    "subject": "Your pay stub is ready",
+    "snippet": "View your latest pay statement in the portal.",
+    "html": "<p>Pay period ending June 30. Net pay: $4,218.44</p>",
+    "date": "2d ago",
+    "hasAttachment": false,
+    "isNewsletter": false
+  },
+  {
+    "id": "test-012",
+    "sender": "GitHub",
+    "from": "notifications@github.com",
+    "subject": "[repo] CI failed on main",
+    "snippet": "Workflow run failed. 3 checks failing.",
+    "html": "<p style=\"color:#cf222e\">● CI / test (failed)</p>",
+    "date": "2d ago",
+    "hasAttachment": false,
+    "isNewsletter": false
+  }
+]
